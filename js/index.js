@@ -55,32 +55,117 @@ const renderSnake = ({ id, body, size }, gameCanvas) => {
 };
 
 class Snake {
-  constructor(id, size, position) {
+  constructor(id, size, delta, position) {
     this.id = id;
     this.size = size;
+    this.delta = delta;
     this.body = [position];
+    this.dx = 0;
+    this.dy = 0;
+    this.ateFood = false;
   }
 
-  moveLeft() {
+  moveForward() {
+    const [{ x, y }] = this.body;
+    this.body.unshift({ x: x + this.dx, y: this.dy + y });
+    if (!this.ateFood)
+      this.body.pop();
+    this.ateFood = false;
+  }
 
+  turnLeft() {
+    this.dx = -this.delta;
+    this.dy = 0;
+  }
+
+  turnRight() {
+    this.dx = this.delta;
+    this.dy = 0;
+  }
+
+  turnDown() {
+    this.dy = this.delta;
+    this.dx = 0;
+  }
+
+  turnUp() {
+    this.dy = -this.delta;
+    this.dx = 0;
+  }
+
+  eatFood() {
+    this.ateFood = true;
   }
 }
 
 const createSnake = ({ size }) => {
   const snakeId = 'snake';
-  const position = { x: 0, y: 0 };
+  const position = { x: 480, y: 0 };
+  const delta = 20;
   return new Snake(
     snakeId,
     size,
+    delta,
     position
   );
 };
 
+const runUserAction = (userAction, snake) => {
+  switch (userAction) {
+    case 'ArrowLeft':
+      snake.turnLeft();
+      break;
+
+    case 'ArrowRight':
+      snake.turnRight();
+      break;
+
+    case 'ArrowUp':
+      snake.turnUp();
+      break;
+
+    case 'ArrowDown':
+      snake.turnDown();
+      break;
+  }
+};
+
+const watchUserAction = (snake) => {
+  window.onkeydown = ({ code }) => {
+    runUserAction(code, snake);
+  };
+};
+
 const main = () => {
   const gameCanvas = createGameCanvas(500, 500);
-  const snake = createSnake({ size: 20 });
+  const snake = createSnake({ size: 20 }, gameCanvas);
 
   renderSnake(snake, gameCanvas);
+  watchUserAction(snake, gameCanvas);
+
+  // setInterval(() => {
+  //   snake.moveForward();
+  //   renderSnake(snake, gameCanvas);
+  // }, 500);
+
+  // setTimeout(() => {
+  //   snake.eatFood();
+  // }, 1500)
+
+  // setTimeout(() => {
+  //   snake.eatFood();
+  // }, 2500)
+  // setInterval(() => {
+  //   snake.turnLeft();
+  //   snake.moveForward();
+  //   renderSnake(snake, gameCanvas);
+  // }, 100);
+
+  // setTimeout(() => {
+  //   snake.turnDown();
+  //   snake.moveForward();
+  //   renderSnake(snake, gameCanvas);
+  // }, 500);
 };
 
 window.onload = main;
