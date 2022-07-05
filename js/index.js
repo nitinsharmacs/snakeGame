@@ -72,38 +72,52 @@ class Snake {
     this.dx = 0;
     this.dy = 0;
     this.ateFood = false;
+    this.direction = null;
   }
 
   moveForward() {
     const [{ x, y }] = this.body;
     this.body.unshift({ x: x + this.dx, y: this.dy + y });
-    if (!this.ateFood)
-      this.body.pop();
+    // if (!this.ateFood)
+    this.body.pop();
     this.ateFood = false;
   }
 
   turnLeft() {
+    if (this.direction === 'right') return;
+
+    this.direction = 'left';
     this.dx = -this.size;
     this.dy = 0;
   }
 
   turnRight() {
+    if (this.direction === 'left') return;
+
+    this.direction = 'right';
     this.dx = this.size;
     this.dy = 0;
   }
 
   turnDown() {
+    if (this.direction === 'up') return;
+
+    this.direction = 'down';
     this.dy = this.size;
     this.dx = 0;
   }
 
   turnUp() {
+    if (this.direction === 'down') return;
+
+    this.direction = 'up';
     this.dy = -this.size;
     this.dx = 0;
   }
 
   eatFood() {
-    this.ateFood = true;
+    const snakeTail = this.body[this.body.length - 1];
+    this.body.push(snakeTail);
   }
 
   hasGotFood({ location }) {
@@ -123,13 +137,13 @@ class Snake {
 
   hasOwnHit() {
     const [snakeHead, ...restBody] = this.body;
-    return restBody.some(({ x, y }) => x === snakeHead.x && y === snakeHead.y);
+    return restBody.some(({ x, y }) =>
+      x === snakeHead.x && y === snakeHead.y);
   }
 }
 
-const createSnake = ({ size }) => {
+const createSnake = ({ size }, position) => {
   const snakeId = 'snake';
-  const position = { x: 0, y: 0 };
   return new Snake(
     snakeId,
     size,
@@ -150,11 +164,11 @@ const isOccupied = (newLocation, occupiedLocations) => {
 };
 
 class Food {
-  constructor(id, icon, size) {
+  constructor(id, icon, size, location) {
     this.id = id;
     this.icon = icon;
     this.size = size;
-    this.location = null;
+    this.location = location;
   }
 
   cook({ pxSize, width, height }, occupiedLocations) {
@@ -211,15 +225,37 @@ const runUserAction = (userAction, snake) => {
 };
 
 const watchUserAction = (snake) => {
-  window.onkeydown = ({ code }) => {
-    runUserAction(code, snake);
+  window.onkeydown = (event) => {
+    runUserAction(event.code, snake);
   };
+};
+
+class ScoreBoard {
+  constructor(player) {
+    this.player = player;
+    this.score = 0;
+    this.scoreDelta = 1;
+  }
+
+  update() {
+    this.score += this.scoreDelta;
+  }
+}
+
+const renderScoreBoard = ({ player, score }) => {
+  const playerElement = document.getElementById('player');
+  const scoreElement = document.getElementById('score');
+
+  playerElement.innerText = player;
+  scoreElement.innerText = score;
 };
 
 const main = () => {
   const gameCanvas = createGameCanvas(20, 25, 25);
-  const snake = createSnake({ size: 20 });
+  const snakePosition = randomCell(20, 25, 25);
+  const snake = createSnake({ size: 20 }, snakePosition);
   const food = createFood(20);
+  const scoreBoard = new ScoreBoard('Nitin');
 
   renderSnake(snake, gameCanvas);
 
@@ -234,6 +270,9 @@ const main = () => {
 
       food.cook(gameCanvas, snake.body);
       renderFood(food, gameCanvas);
+
+      scoreBoard.update();
+      renderScoreBoard(scoreBoard);
     }
 
     snake.moveForward();

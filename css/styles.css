@@ -3,16 +3,30 @@
   padding: 0;
 }
 
-.page {
+body {
+  background-color: #001233;
   width: 100vw;
   height: 100vh;
+  font-family: sans-serif;
+}
+
+header h1 {
+  color: white;
+  text-align: center;
+  font-weight: 400;
+  font-size: 3em;
+  padding: 1em;
+}
+
+.page {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  flex-direction: row-reverse;
 }
 
 .canvas {
-  border: 1px solid black;
+  border: 1px solid white;
   width: 500px;
   height: 500px;
   position: relative;
@@ -25,9 +39,21 @@
 }
 
 .snake-segment {
-  background-color: rgb(207, 43, 43);
+  background-color: #0466C8;
 }
 
 .food {
-  background-color: black;
+  background-color: #979DAC;
+  border-radius: 50%;
+}
+
+.score-board {
+  border: 1px solid white;
+  margin: 1em;
+  margin-top: 0;
+  padding: 0.5em 1em;
+  min-width: 200px;
+  font-size: 1.2em;
+  line-height: 1.3em;
+  color: white;
 }
