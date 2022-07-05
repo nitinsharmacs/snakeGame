@@ -1,5 +1,9 @@
 const px = (value) => `${value}px`;
 
+const random = (lower, upper) => {
+  return lower + (Math.random() * (upper - lower));
+};
+
 const removeElement = (elementId) => {
   const element = document.getElementById(elementId);
   element && element.remove();
@@ -8,8 +12,9 @@ const removeElement = (elementId) => {
 class GameCanvas {
   #id;
   #canvas;
-  constructor(id, width, height, canvas) {
+  constructor(id, pxSize, width, height, canvas) {
     this.#id = id;
+    this.pxSize = pxSize;
     this.width = width;
     this.height = height;
     this.#canvas = canvas;
@@ -21,17 +26,22 @@ class GameCanvas {
   }
 }
 
-const createGameCanvas = (width, height) => {
+const createGameCanvas = (pxSize, width, height) => {
   const page = document.getElementById('page');
   const canvasElement = document.createElement('div');
 
   canvasElement.id = 'game-canvas';
-  canvasElement.style.width = px(width);
-  canvasElement.style.height = px(height);
+  canvasElement.style.width = px(width * pxSize);
+  canvasElement.style.height = px(height * pxSize);
   canvasElement.classList.add('canvas');
 
   page.appendChild(canvasElement);
-  return new GameCanvas('game-canvas', width, height, canvasElement);
+  return new GameCanvas('game-canvas',
+    pxSize,
+    width,
+    height,
+    canvasElement
+  );
 };
 
 const renderSnake = ({ id, body, size }, gameCanvas) => {
@@ -55,10 +65,9 @@ const renderSnake = ({ id, body, size }, gameCanvas) => {
 };
 
 class Snake {
-  constructor(id, size, delta, position) {
+  constructor(id, size, position) {
     this.id = id;
     this.size = size;
-    this.delta = delta;
     this.body = [position];
     this.dx = 0;
     this.dy = 0;
@@ -74,39 +83,97 @@ class Snake {
   }
 
   turnLeft() {
-    this.dx = -this.delta;
+    this.dx = -this.size;
     this.dy = 0;
   }
 
   turnRight() {
-    this.dx = this.delta;
+    this.dx = this.size;
     this.dy = 0;
   }
 
   turnDown() {
-    this.dy = this.delta;
+    this.dy = this.size;
     this.dx = 0;
   }
 
   turnUp() {
-    this.dy = -this.delta;
+    this.dy = -this.size;
     this.dx = 0;
   }
 
   eatFood() {
     this.ateFood = true;
   }
+
+  hasGotFood({ location }) {
+    // console.log(location);
+    // console.log(this.body);
+    const [snakeHead] = this.body;
+    return snakeHead.x === location.x && snakeHead.y === location.y;
+  }
 }
 
 const createSnake = ({ size }) => {
   const snakeId = 'snake';
   const position = { x: 480, y: 0 };
-  const delta = 20;
   return new Snake(
     snakeId,
     size,
-    delta,
     position
+  );
+};
+
+const randomCell = (cellSize, width, height) => {
+  const x = Math.round(random(0, width - 1)) * cellSize;
+  const y = Math.round(random(0, height - 1)) * cellSize;
+
+  return { x, y };
+};
+
+const isOccupied = (newLocation, occupiedLocations) => {
+  return occupiedLocations.some(({ x, y }) =>
+    newLocation.x === x && newLocation.y === y);
+};
+
+class Food {
+  constructor(id, icon, size) {
+    this.id = id;
+    this.icon = icon;
+    this.size = size;
+    this.location = null;
+  }
+
+  cook({ pxSize, width, height }, occupiedLocations) {
+    let cellLocation = null;
+
+    do {
+      cellLocation = randomCell(pxSize, width, height);
+    } while (isOccupied(cellLocation, occupiedLocations))
+
+    this.location = cellLocation;
+    return cellLocation;
+  }
+}
+
+const renderFood = ({ id, icon, location, size }, gameCanvas) => {
+  const foodElement = document.createElement('div');
+
+  foodElement.id = id;
+  foodElement.classList.add('food');
+  foodElement.style.left = px(location.x);
+  foodElement.style.top = px(location.y);
+  foodElement.style.width = px(size);
+  foodElement.innerText = icon;
+
+  gameCanvas.render({ id, element: foodElement });
+};
+
+const createFood = (size) => {
+  return new Food(
+    'foody',
+    '🍔',
+    size
   );
 };
 
@@ -137,35 +204,28 @@ const watchUserAction = (snake) => {
 };
 
 const main = () => {
-  const gameCanvas = createGameCanvas(500, 500);
-  const snake = createSnake({ size: 20 }, gameCanvas);
+  const gameCanvas = createGameCanvas(20, 25, 25);
+  const snake = createSnake({ size: 20 });
+  const food = createFood(20);
 
   renderSnake(snake, gameCanvas);
+
+  food.cook(gameCanvas, snake.body);
+  renderFood(food, gameCanvas);
+
   watchUserAction(snake, gameCanvas);
 
-  // setInterval(() => {
-  //   snake.moveForward();
-  //   renderSnake(snake, gameCanvas);
-  // }, 500);
+  setInterval(() => {
+    if (snake.hasGotFood(food)) {
+      snake.eatFood();
+      food.cook(gameCanvas, snake.body);
+      renderFood(food, gameCanvas);
+    }
 
-  // setTimeout(() => {
-  //   snake.eatFood();
-  // }, 1500)
+    snake.moveForward();
+    renderSnake(snake, gameCanvas);
 
-  // setTimeout(() => {
-  //   snake.eatFood();
-  // }, 2500)
-  // setInterval(() => {
-  //   snake.turnLeft();
-  //   snake.moveForward();
-  //   renderSnake(snake, gameCanvas);
-  // }, 100);
-
-  // setTimeout(() => {
-  //   snake.turnDown();
-  //   snake.moveForward();
-  //   renderSnake(snake, gameCanvas);
-  // }, 500);
+  }, 100);
 };
 
 window.onload = main;
