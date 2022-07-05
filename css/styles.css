@@ -36,10 +36,16 @@ header h1 {
   position: absolute;
   border-radius: 20%;
   aspect-ratio: 1;
+  transform: scale(0.9);
 }
 
 .snake-segment {
   background-color: #0466C8;
+}
+
+.snake-head {
+  background-color: #c0c6cd;
+  transform: rotate(45deg) scale(0.9);
 }
 
 .food {

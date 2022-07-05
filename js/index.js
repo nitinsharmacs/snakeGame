@@ -44,21 +44,30 @@ const createGameCanvas = (pxSize, width, height) => {
   );
 };
 
+const snakeSegment = ({ x, y }, size, id, ...classes) => {
+  const segmentElemet = document.createElement('div');
+
+  segmentElemet.id = `snake-segment-${id}`;
+  segmentElemet.classList.add('cell', 'snake-segment', ...classes);
+  segmentElemet.style.width = size;
+  segmentElemet.style.left = px(x);
+  segmentElemet.style.top = px(y);
+
+  return segmentElemet;
+};
+
 const renderSnake = ({ id, body, size }, gameCanvas) => {
   const snakeElement = document.createElement('div');
   snakeElement.id = id;
   snakeElement.classList.add('snake-body');
 
-  body.forEach((snakeSegment, index) => {
-    const segmentElemet = document.createElement('div');
+  const [snakeHead] = body;
+  const snakeHeadElement = snakeSegment(snakeHead, size, 'head', 'snake-head');
+  snakeElement.appendChild(snakeHeadElement);
 
-    segmentElemet.id = `snake-segment-${index}`;
-    segmentElemet.classList.add('cell', 'snake-segment');
-    segmentElemet.style.width = size;
-    segmentElemet.style.left = px(snakeSegment.x);
-    segmentElemet.style.top = px(snakeSegment.y);
-
-    snakeElement.appendChild(segmentElemet);
+  body.slice(1).forEach((segment, index) => {
+    const snakeSegmentElement = snakeSegment(segment, size, index);
+    snakeElement.appendChild(snakeSegmentElement);
   });
 
   gameCanvas.render({ id: id, element: snakeElement });
@@ -78,7 +87,6 @@ class Snake {
   moveForward() {
     const [{ x, y }] = this.body;
     this.body.unshift({ x: x + this.dx, y: this.dy + y });
-    // if (!this.ateFood)
     this.body.pop();
     this.ateFood = false;
   }
