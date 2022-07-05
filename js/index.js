@@ -28,6 +28,8 @@ class GameCanvas {
 
 const createGameCanvas = (pxSize, width, height) => {
   const page = document.getElementById('page');
+
+  removeElement('game-canvas');
   const canvasElement = document.createElement('div');
 
   canvasElement.id = 'game-canvas';
@@ -248,48 +250,100 @@ class ScoreBoard {
   update() {
     this.score += this.scoreDelta;
   }
+
+  resetScore() {
+    this.score = 0;
+  }
 }
 
 const renderScoreBoard = ({ player, score }) => {
   const playerElement = document.getElementById('player');
   const scoreElement = document.getElementById('score');
-
+  console.log(player);
   playerElement.innerText = player;
   scoreElement.innerText = score;
 };
 
-const main = () => {
-  const gameCanvas = createGameCanvas(20, 25, 25);
-  const snakePosition = randomCell(20, 25, 25);
-  const snake = createSnake({ size: 20 }, snakePosition);
-  const food = createFood(20);
-  const scoreBoard = new ScoreBoard('Nitin');
+const toggleGameOverPopup = () => {
+  const gameOverPopup = document.getElementById('game-over-popup');
+  gameOverPopup.classList.toggle('show-popup');
+};
 
-  renderSnake(snake, gameCanvas);
-
-  food.cook(gameCanvas, snake.body);
-  renderFood(food, gameCanvas);
+const startGame = (game) => {
+  const { snake, canvas, food, scoreBoard } = game;
 
   watchUserAction(snake);
+
+  renderScoreBoard(scoreBoard);
+  renderSnake(snake, canvas);
+
+  food.cook(canvas, snake.body);
+  renderFood(food, canvas);
 
   const intervalId = setInterval(() => {
     if (snake.hasGotFood(food)) {
       snake.eatFood();
 
-      food.cook(gameCanvas, snake.body);
-      renderFood(food, gameCanvas);
+      food.cook(canvas, snake.body);
+      renderFood(food, canvas);
 
       scoreBoard.update();
       renderScoreBoard(scoreBoard);
     }
 
     snake.moveForward();
-    if (snake.hasHitWithWall(gameCanvas) || snake.hasOwnHit()) {
+
+    if (game.isOver()) {
       clearInterval(intervalId);
+      toggleGameOverPopup();
       return;
     }
-    renderSnake(snake, gameCanvas);
+    renderSnake(snake, canvas);
   }, 100);
+};
+
+class Game {
+  constructor(canvas, snake, food, scoreBoard) {
+    this.canvas = canvas;
+    this.snake = snake;
+    this.food = food;
+    this.scoreBoard = scoreBoard;
+  }
+
+  isOver() {
+    return this.snake.hasHitWithWall(this.canvas) || this.snake.hasOwnHit();
+  }
+}
+
+const createGame = (player, cellSize, width, height) => {
+  const gameCanvas = createGameCanvas(cellSize, width, height);
+
+  const snakePosition = randomCell(cellSize, width, height);
+  const snake = createSnake({ size: cellSize }, snakePosition);
+
+  const food = createFood(cellSize);
+
+  const scoreBoard = new ScoreBoard(player);
+
+  return new Game(gameCanvas, snake, food, scoreBoard);
+};
+
+const restartGame = (player) => {
+  const game = createGame(player, 20, 25, 25);
+  startGame(game);
+};
+
+const main = () => {
+  const player = prompt('Please enter your name');
+  const game = createGame(player, 20, 25, 25);
+
+  startGame(game);
+
+  const restartButton = document.getElementById('restart-btn');
+  restartButton.onclick = () => {
+    restartGame(player);
+    toggleGameOverPopup();
+  };
 };
 
 window.onload = main;

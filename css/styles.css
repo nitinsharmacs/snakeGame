@@ -62,4 +62,38 @@ header h1 {
   font-size: 1.2em;
   line-height: 1.3em;
   color: white;
+  text-transform: capitalize;
+}
+
+.popup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  display: none;
+}
+
+.show-popup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-heading {
+  color: white;
+  font-size: 2em;
+}
+
+.restart {
+  margin: 2em;
+  overflow: hidden;
+}
+
+.restart button {
+  padding: 0.5em 1em;
+  font-size: 1.5em;
 }
