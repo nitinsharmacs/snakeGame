@@ -53,7 +53,7 @@ const renderSnake = ({ id, body, size }, gameCanvas) => {
     const segmentElemet = document.createElement('div');
 
     segmentElemet.id = `snake-segment-${index}`;
-    segmentElemet.classList.add('snake-segment');
+    segmentElemet.classList.add('cell', 'snake-segment');
     segmentElemet.style.width = size;
     segmentElemet.style.left = px(snakeSegment.x);
     segmentElemet.style.top = px(snakeSegment.y);
@@ -107,16 +107,29 @@ class Snake {
   }
 
   hasGotFood({ location }) {
-    // console.log(location);
-    // console.log(this.body);
     const [snakeHead] = this.body;
     return snakeHead.x === location.x && snakeHead.y === location.y;
+  }
+
+  hasHitWithWall({ pxSize: pxSize, width, height }) {
+    const [snakeHead] = this.body;
+    return (
+      snakeHead.x >= (width * pxSize) ||
+      snakeHead.y >= (height * pxSize) ||
+      snakeHead.x < 0 ||
+      snakeHead.y < 0
+    );
+  }
+
+  hasOwnHit() {
+    const [snakeHead, ...restBody] = this.body;
+    return restBody.some(({ x, y }) => x === snakeHead.x && y === snakeHead.y);
   }
 }
 
 const createSnake = ({ size }) => {
   const snakeId = 'snake';
-  const position = { x: 480, y: 0 };
+  const position = { x: 0, y: 0 };
   return new Snake(
     snakeId,
     size,
@@ -124,9 +137,9 @@ const createSnake = ({ size }) => {
   );
 };
 
-const randomCell = (cellSize, width, height) => {
-  const x = Math.round(random(0, width - 1)) * cellSize;
-  const y = Math.round(random(0, height - 1)) * cellSize;
+const randomCell = (cellSize, gridWidth, gridHeight) => {
+  const x = Math.round(random(0, gridWidth - 1)) * cellSize;
+  const y = Math.round(random(0, gridHeight - 1)) * cellSize;
 
   return { x, y };
 };
@@ -160,7 +173,7 @@ const renderFood = ({ id, icon, location, size }, gameCanvas) => {
   const foodElement = document.createElement('div');
 
   foodElement.id = id;
-  foodElement.classList.add('food');
+  foodElement.classList.add('cell', 'food');
   foodElement.style.left = px(location.x);
   foodElement.style.top = px(location.y);
   foodElement.style.width = px(size);
@@ -172,7 +185,7 @@ const renderFood = ({ id, icon, location, size }, gameCanvas) => {
 const createFood = (size) => {
   return new Food(
     'foody',
-    '🍔',
+    '',
     size
   );
 };
@@ -213,18 +226,22 @@ const main = () => {
   food.cook(gameCanvas, snake.body);
   renderFood(food, gameCanvas);
 
-  watchUserAction(snake, gameCanvas);
+  watchUserAction(snake);
 
-  setInterval(() => {
+  const intervalId = setInterval(() => {
     if (snake.hasGotFood(food)) {
       snake.eatFood();
+
       food.cook(gameCanvas, snake.body);
       renderFood(food, gameCanvas);
     }
 
     snake.moveForward();
+    if (snake.hasHitWithWall(gameCanvas) || snake.hasOwnHit()) {
+      clearInterval(intervalId);
+      return;
+    }
     renderSnake(snake, gameCanvas);
-
   }, 100);
 };
 

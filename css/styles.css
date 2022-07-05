@@ -18,14 +18,16 @@
   position: relative;
 }
 
-.snake-segment {
+.cell {
   position: absolute;
-  background-color: rgb(207, 43, 43);
   border-radius: 20%;
   aspect-ratio: 1;
 }
 
+.snake-segment {
+  background-color: rgb(207, 43, 43);
+}
+
 .food {
-  position: absolute;
-  aspect-ratio: 1;
+  background-color: black;
 }
